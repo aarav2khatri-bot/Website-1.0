@@ -481,6 +481,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 </div>
 
 <script>
+
+function saveData(){
+  localStorage.setItem('otaku_players', JSON.stringify(players));
+}
+
+function loadData(){
+  const data = localStorage.getItem('otaku_players');
+  if(data){
+    players = JSON.parse(data);
+    nextId = players.length ? Math.max(...players.map(p=>p.id)) + 1 : 1;
+  }
+}
+  
 const ADMIN_PW='MeowGopGop';
 
 const GMS=[
@@ -758,6 +771,7 @@ function addPlayer(){
   const face=document.getElementById('aFaceUrl').value.trim();
   if(!name||!gm){notify('Fill in username and gamemode.',true);return;}
   players.push({id:nextId++,name,gm,tier,pts,region,face});
+  saveData();
   document.getElementById('aU').value='';document.getElementById('aPts').value='';
   document.getElementById('aReg').value='';document.getElementById('aFaceUrl').value='';
   renderAdmin();notify(`${name} added to ${tier} Tier!`);
@@ -769,16 +783,19 @@ function editP(id){
   const pt=prompt(`Points for ${p.name}?`,p.pts||0);if(pt===null)return;
   p.tier=t.toUpperCase().trim();
   p.pts=parseInt(pt)||p.pts;
+  saveData();
   renderAdmin();notify(`${p.name} updated!`);
 }
 function delP(id){
   if(!confirm('Delete this player?'))return;
   players=players.filter(x=>x.id!==id);
+  saveData();
   renderAdmin();notify('Player deleted.');
 }
 function approveSub(id){
   const s=submissions.find(x=>x.id===id);if(!s)return;
   players.push({id:nextId++,name:s.username,gm:s.gm,tier:s.tier,pts:TIER_PTS[s.tier]||0,region:'NA',face:''});
+  saveData();
   submissions=submissions.filter(x=>x.id!==id);
   renderAdmin();notify(`${s.username} approved!`);
 }
@@ -810,11 +827,14 @@ document.getElementById('loginOv').addEventListener('click',function(e){if(e.tar
 document.getElementById('profOv').addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')});
 
 // INIT
-initGMs();
-initLBFilters();
-renderRanks();
-renderTiers();
-renderLB();
+window.onload = () => {
+  loadData();          // 🔥 loads saved players
+  initGMs();
+  initLBFilters();
+  renderRanks();
+  renderTiers();
+  renderLB();
+};
 </script>
 </body>
 </html>
